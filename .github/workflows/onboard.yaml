@@ -75,7 +75,6 @@ jobs:
           curl -s --fail-with-body --header "Authorization: Bearer ${{ secrets.BOT_GITHUB_TOKEN }}" https://api.github.com/repos/${{ matrix.repository }}/rulesets -d @./template/rulesets.json
     permissions:
       actions: read
-
   adjust-settings:
     needs: [ list-repositories, init-settings ]
     runs-on: ubuntu-slim
@@ -93,6 +92,7 @@ jobs:
       - env:
           GH_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
         run: |
+          set -x
           collaborator_count="$(gh api /repos/${{ matrix.repository }}/collaborators --paginate | jq length)"
           gh api /repos/${{ matrix.repository }}/rulesets --paginate | jq '.[].id' | while read -r id; do
             gh api /repos/${{ matrix.repository }}/rulesets/"$id" > ruleset.json
@@ -115,6 +115,7 @@ jobs:
           done
     permissions:
       actions: read
+
   deploy-codeowners:
     needs: [ list-repositories, init-settings ]
     runs-on: ubuntu-slim
