@@ -92,7 +92,6 @@ jobs:
       - env:
           GH_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
         run: |
-          set -x
           collaborator_count="$(gh api /repos/${{ matrix.repository }}/collaborators --paginate | jq length)"
           gh api /repos/${{ matrix.repository }}/rulesets --paginate | jq '.[].id' | while read -r id; do
             gh api /repos/${{ matrix.repository }}/rulesets/"$id" > ruleset.json
@@ -110,7 +109,7 @@ jobs:
             if [ "$(jq < ruleset.json '.rules[] | select(.type == "pull_request") | .parameters.required_approving_review_count')" -gt $((collaborator_count - 1)) ]; then
               jq < ruleset.json '.rules |= map(if .type == "pull_request" then .parameters.required_approving_review_count = '$((collaborator_count - 1))' else . end)' > tmp.json && cat < tmp.json > ruleset.json && rm tmp.json
             fi
-            jq < ruleset.json '{ "name": .name, "target": .target, "enforcement": .enforcement, "bypass_actors": .bypass_actors, "conditions": .conditions, "rules": .rules }' \
+            jq < ruleset.json '{ "name": .name, "target": .target, "enforcement": .enforcement, "bypass_actors": .bypass_actors, "conditions": .conditions, "rules": .rules }' | tee /dev/stderr \
               | curl -s --fail-with-body --header "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/${{ matrix.repository }}/rulesets/"$id" -d @- -X PATCH
           done
     permissions:
