@@ -1,7 +1,9 @@
 name: Autorerun
 
 on:
-  workflow_dispatch:
+  workflow_run:
+    workflows: ['Scan', 'Onboard']
+    types: completed
   schedule:
     - cron: '0 0 * * *' # TODO when to run
 
